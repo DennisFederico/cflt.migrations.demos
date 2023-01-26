@@ -1,0 +1,13 @@
+confluent_cloud_api_key="<your cloud owner api key>"
+confluent_cloud_api_secret="<your cloud owner api secret>"
+
+source_environment_name="source environment name - to create"
+source_kafka_cluster_name="souce cluster name - to create"
+
+target_environment_name="target environment name - to create"
+target_kafka_cluster_name="target cluster name - to create"
+
+source_topics=["source.topic.1", "source.topic.2", "different-topic"]
+topics_partition=4
+
+source_replicator_topic-prefixes=["source.topic."]
