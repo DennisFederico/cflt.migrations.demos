@@ -195,6 +195,8 @@ resource "confluent_kafka_topic" "connect_replicator_internal_configs-topic" {
     key    = confluent_api_key.target_cluster-sa-kafka-api-key.id
     secret = confluent_api_key.target_cluster-sa-kafka-api-key.secret
   }
+
+  depends_on = [ confluent_kafka_cluster.target_kafka-cluster ]
 }
 
 resource "confluent_kafka_topic" "connect_replicator_internal_offsets-topic" { 
@@ -213,6 +215,8 @@ resource "confluent_kafka_topic" "connect_replicator_internal_offsets-topic" {
     key    = confluent_api_key.target_cluster-sa-kafka-api-key.id
     secret = confluent_api_key.target_cluster-sa-kafka-api-key.secret
   }
+
+  depends_on = [ confluent_kafka_cluster.target_kafka-cluster ]
 }
 
 resource "confluent_kafka_topic" "connect_replicator_internal_status-topic" { 
@@ -231,6 +235,8 @@ resource "confluent_kafka_topic" "connect_replicator_internal_status-topic" {
     key    = confluent_api_key.target_cluster-sa-kafka-api-key.id
     secret = confluent_api_key.target_cluster-sa-kafka-api-key.secret
   }
+
+  depends_on = [ confluent_kafka_cluster.target_kafka-cluster ]
 }
 
 ### SCHEMA REGISTRY ESSENTIALS PACKAGE ON THE TARGET CLUSTER
@@ -257,6 +263,7 @@ resource "confluent_schema_registry_cluster" "target_sr" {
   # lifecycle {
   #   prevent_destroy = true
   # }
+  depends_on = [ confluent_kafka_cluster.target_kafka-cluster ]
 }
 
 ### SR API KEY
@@ -278,4 +285,5 @@ resource "confluent_api_key" "target_schema-registry-api-key" {
       id =  confluent_environment.target_environment.id
     }
   }
+  depends_on = [ confluent_schema_registry_cluster.target_sr ]
 }

@@ -27,4 +27,5 @@ An API-Key and Secret of an user or SA (Service Account) with enough privileges 
 3. Initialize terraform `terraform init`
 4. Apply the configuration to provision the resources `terraform apply`
 5. When done, to show the output `terraform output resources-data`
-
+6. Write Docker Compose environment data `terraform output -raw compose_env > ../replicator/.env`
+7. Write the launch script for replicator `terraform output -raw submit-replicator_sh > ../replicator/submit-replicator.sh`
