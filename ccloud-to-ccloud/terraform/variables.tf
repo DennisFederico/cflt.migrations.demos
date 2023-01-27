@@ -40,6 +40,13 @@ variable "source_topics" {
   sensitive   = false  
 }
 
+variable "replicator_consumer_group_prefix" {
+  description = "Prefix of the replicator consumer group"  
+  type        = string
+  default     = "replicator-demo"
+  sensitive   = false  
+}
+
 variable "topics_partition" {
   description = "Topics Partition"
   default = 6

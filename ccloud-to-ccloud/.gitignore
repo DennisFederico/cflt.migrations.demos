@@ -3,3 +3,6 @@ terraform.tfstate*
 .terraform
 .terraform.lock.hcl
 .env
+submit-replicator.sh
+source-kafka.properties
+target-kafka.properties

@@ -46,6 +46,8 @@ output "submit-replicator_sh" {
       "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
       "topic.auto.create": "true",
       "topic.preserve.partitions": "true",
+      "offset.translator.tasks.max": "0",
+      "offset.timestamps.commit": "false",
 
       "src.kafka.bootstrap.servers": "${confluent_kafka_cluster.source_kafka-cluster.bootstrap_endpoint}",
       "src.kafka.security.protocol": "SASL_SSL",
@@ -86,22 +88,44 @@ EOT
   sensitive = true
 }
 
-### KAFKA PROPERTIES FILE EXAMPLE
-# bootstrap.servers=pkc-4r297.europe-west1.gcp.confluent.cloud:9092
-# security.protocol=SASL_SSL
-# sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='Y34CH54KH5Y6PV6M' password='3sN8tXjSMmK9GoL+v9poudUpyjiLtSTmdUEGbpFztp9mcACAbEarApjwtOS/HcIZ';
-# sasl.mechanism=PLAIN
-# # Required for correctness in Apache Kafka clients prior to 2.6
-# client.dns.lookup=use_all_dns_ips
-# # Best practice for higher availability in Apache Kafka clients prior to 3.0
-# session.timeout.ms=45000
-# # Best practice for Kafka producer to prevent data loss
-# acks=all
-# # Required connection configs for Confluent Cloud Schema Registry
-# schema.registry.url=https://psrc-kk5gg.europe-west3.gcp.confluent.cloud
-# basic.auth.credentials.source=USER_INFO
-# basic.auth.user.info=VEXNQA6U2Y4QQYO3:Ivk1e2z5zlTS66LI5VqgiodxVDS65Tl4dJHNp5hIPsmzY7LWf+HZSN2bJWgEj0MO
+output "source_cluster_kafka_properties" {
+  value = <<-EOT
+#### VARIABLES FOR DOCKER COMPOSE
+bootstrap.servers=${confluent_kafka_cluster.source_kafka-cluster.bootstrap_endpoint}
+security.protocol=SASL_SSL
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='${confluent_api_key.source_cluster-sa-kafka-api-key.id}' password='${nonsensitive(confluent_api_key.source_cluster-sa-kafka-api-key.secret)}';
+sasl.mechanism=PLAIN
+# Required for correctness in Apache Kafka clients prior to 2.6
+client.dns.lookup=use_all_dns_ips
+# Best practice for higher availability in Apache Kafka clients prior to 3.0
+session.timeout.ms=45000
+# Best practice for Kafka producer to prevent data loss
+acks=all
+# Required connection configs for Confluent Cloud Schema Registry
+schema.registry.url=${confluent_schema_registry_cluster.target_sr.rest_endpoint}
+basic.auth.credentials.source=USER_INFO
+basic.auth.user.info=${confluent_api_key.target_schema-registry-api-key.id}:${nonsensitive(confluent_api_key.target_schema-registry-api-key.secret)}
+EOT
+  sensitive = true
+}
 
-
-
-
+output "target_cluster_kafka_properties" {
+  value = <<-EOT
+#### VARIABLES FOR DOCKER COMPOSE
+bootstrap.servers=${confluent_kafka_cluster.target_kafka-cluster.bootstrap_endpoint}
+security.protocol=SASL_SSL
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='${confluent_api_key.target_cluster-sa-kafka-api-key.id}' password='${nonsensitive(confluent_api_key.target_cluster-sa-kafka-api-key.secret)}';
+sasl.mechanism=PLAIN
+# Required for correctness in Apache Kafka clients prior to 2.6
+client.dns.lookup=use_all_dns_ips
+# Best practice for higher availability in Apache Kafka clients prior to 3.0
+session.timeout.ms=45000
+# Best practice for Kafka producer to prevent data loss
+acks=all
+# Required connection configs for Confluent Cloud Schema Registry
+schema.registry.url=${confluent_schema_registry_cluster.target_sr.rest_endpoint}
+basic.auth.credentials.source=USER_INFO
+basic.auth.user.info=${confluent_api_key.target_schema-registry-api-key.id}:${nonsensitive(confluent_api_key.target_schema-registry-api-key.secret)}
+EOT
+  sensitive = true
+}

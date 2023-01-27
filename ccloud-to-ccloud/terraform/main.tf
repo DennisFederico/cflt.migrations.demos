@@ -158,6 +158,17 @@ resource "confluent_role_binding" "source_replicator-sa-read" {
   role_name   = "DeveloperRead"
   crn_pattern = "${confluent_kafka_cluster.source_kafka-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.source_kafka-cluster.id}/topic=${var.source_replicator_topic-prefixes[count.index]}*"
 }
+# resource "confluent_role_binding" "source_replicator-sa-write_timestamps" {
+#   count = length(var.source_replicator_topic-prefixes)
+#   principal   = "User:${confluent_service_account.source_replicator-sa.id}"
+#   role_name   = "DeveloperWrite"
+#   crn_pattern = "${confluent_kafka_cluster.source_kafka-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.source_kafka-cluster.id}/topic=__consumer_timestamps"
+# }
+resource "confluent_role_binding" "source_replicator-sa-consumer_group" {  
+  principal = "User:${confluent_service_account.source_replicator-sa.id}"
+  role_name = "DeveloperRead"
+  crn_pattern = "${confluent_kafka_cluster.source_kafka-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.source_kafka-cluster.id}/group=${var.replicator_consumer_group_prefix}*"
+}
 resource "confluent_api_key" "source_replicator-sa-kafka-api-key" {
   display_name = "source_replicator-sa-kafka-api-key"
   description  = "Kafka API Key that is owned by '${confluent_service_account.source_replicator-sa.display_name}' service account"
