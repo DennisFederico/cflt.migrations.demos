@@ -52,8 +52,9 @@ variable "topics_partition" {
   default = 6
 }
 
-variable "source_replicator_topic-prefixes" {
-  description = "Topic Prefixes of the topics to grant read access"
-  type        = list(string)
+variable "source_replicator_topics-regex" {
+  description = "Regex to match for the topics to replicate"
+  type        = string
+  default     = "source.topic.*"
   sensitive   = false
 }

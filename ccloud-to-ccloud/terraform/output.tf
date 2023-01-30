@@ -41,7 +41,7 @@ output "submit-replicator_sh" {
       "name": "replicator-demo",
       "connector.class": "io.confluent.connect.replicator.ReplicatorSourceConnector",
       "tasks.max": "1",
-      "topic.whitelist": "source.topic.2",
+      "topic.regex": "${var.source_replicator_topics-regex}",
       "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
       "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
       "topic.auto.create": "true",
@@ -49,11 +49,11 @@ output "submit-replicator_sh" {
       "offset.translator.tasks.max": "0",
       "offset.timestamps.commit": "false",
 
+      "src.consumer.group.id": "replicator-demo",
       "src.kafka.bootstrap.servers": "${confluent_kafka_cluster.source_kafka-cluster.bootstrap_endpoint}",
       "src.kafka.security.protocol": "SASL_SSL",
       "src.kafka.sasl.mechanism": "PLAIN",
       "src.kafka.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username='${confluent_api_key.source_replicator-sa-kafka-api-key.id}' password='${nonsensitive(confluent_api_key.source_replicator-sa-kafka-api-key.secret)}';",
-      "src.consumer.group.id": "replicator-demo",
 
       "dest.kafka.bootstrap.servers": "${confluent_kafka_cluster.target_kafka-cluster.bootstrap_endpoint}",
       "dest.kafka.security.protocol": "SASL_SSL",

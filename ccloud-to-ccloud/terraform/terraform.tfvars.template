@@ -8,6 +8,6 @@ target_environment_name="target environment name - to create"
 target_kafka_cluster_name="target cluster name - to create"
 
 source_topics=["source.topic.1", "source.topic.2", "different-topic"]
-topics_partition=4
+topics_partition=1
 
-source_replicator_topic-prefixes=["source.topic."]
+source_replicator_topics-regex="source.topics.*"

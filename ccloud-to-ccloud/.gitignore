@@ -6,3 +6,4 @@ terraform.tfstate*
 submit-replicator.sh
 source-kafka.properties
 target-kafka.properties
+notes.txt

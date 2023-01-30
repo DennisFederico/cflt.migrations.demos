@@ -69,7 +69,7 @@ resource "confluent_role_binding" "source_cluster-sa-owner-resource-owner" {
 
 resource "confluent_role_binding" "target_cluster-sa-owner-resource-owner" {
   principal   = "User:${confluent_service_account.target_cluster-sa.id}"
-  role_name   = "CloudClusterAdmin"  
+  role_name   = "CloudClusterAdmin"
   crn_pattern = confluent_kafka_cluster.target_kafka-cluster.rbac_crn
 }
 
@@ -92,6 +92,7 @@ resource "confluent_api_key" "source_cluster-sa-kafka-api-key" {
       id = confluent_environment.source_environment.id
     }
   }
+  depends_on = [ confluent_service_account.source_cluster-sa ]
 }
 
 resource "confluent_api_key" "target_cluster-sa-kafka-api-key" {
@@ -112,6 +113,7 @@ resource "confluent_api_key" "target_cluster-sa-kafka-api-key" {
       id = confluent_environment.target_environment.id
     }
   }
+  depends_on = [ confluent_service_account.target_cluster-sa ]
 }
 
 ### CREATION OF TOPICS IN THE SOURCE CLUSTER
@@ -133,6 +135,8 @@ resource "confluent_kafka_topic" "source_topics" {
     key    = confluent_api_key.source_cluster-sa-kafka-api-key.id
     secret = confluent_api_key.source_cluster-sa-kafka-api-key.secret
   }
+
+  depends_on = [ confluent_kafka_cluster.source_kafka-cluster ]
 }
 
 ### USER FOR REPLICATION WITH DEVELOPER READ ACCESS TO THE SOURCE TOPICS
@@ -147,19 +151,18 @@ resource "confluent_service_account" "source_replicator-sa" {
 # https://docs.confluent.io/platform/current/multi-dc-deployments/replicator/index.html#crep-with-rbac
 # https://docs.confluent.io/platform/current/multi-dc-deployments/replicator/index.html#acls-to-read-from-the-source-cluster
 resource "confluent_role_binding" "source_replicator-sa-manage" {
-  count = length(var.source_replicator_topic-prefixes)
+  count = length(var.source_topics)
   principal   = "User:${confluent_service_account.source_replicator-sa.id}"
   role_name   = "DeveloperManage"
-  crn_pattern = "${confluent_kafka_cluster.source_kafka-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.source_kafka-cluster.id}/topic=${var.source_replicator_topic-prefixes[count.index]}*"
+  crn_pattern = "${confluent_kafka_cluster.source_kafka-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.source_kafka-cluster.id}/topic=${var.source_topics[count.index]}*"
 }
 resource "confluent_role_binding" "source_replicator-sa-read" {
-  count = length(var.source_replicator_topic-prefixes)
+  count = length(var.source_topics)
   principal   = "User:${confluent_service_account.source_replicator-sa.id}"
   role_name   = "DeveloperRead"
-  crn_pattern = "${confluent_kafka_cluster.source_kafka-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.source_kafka-cluster.id}/topic=${var.source_replicator_topic-prefixes[count.index]}*"
+  crn_pattern = "${confluent_kafka_cluster.source_kafka-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.source_kafka-cluster.id}/topic=${var.source_topics[count.index]}*"
 }
 # resource "confluent_role_binding" "source_replicator-sa-write_timestamps" {
-#   count = length(var.source_replicator_topic-prefixes)
 #   principal   = "User:${confluent_service_account.source_replicator-sa.id}"
 #   role_name   = "DeveloperWrite"
 #   crn_pattern = "${confluent_kafka_cluster.source_kafka-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.source_kafka-cluster.id}/topic=__consumer_timestamps"
@@ -169,6 +172,7 @@ resource "confluent_role_binding" "source_replicator-sa-consumer_group" {
   role_name = "DeveloperRead"
   crn_pattern = "${confluent_kafka_cluster.source_kafka-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.source_kafka-cluster.id}/group=${var.replicator_consumer_group_prefix}*"
 }
+
 resource "confluent_api_key" "source_replicator-sa-kafka-api-key" {
   display_name = "source_replicator-sa-kafka-api-key"
   description  = "Kafka API Key that is owned by '${confluent_service_account.source_replicator-sa.display_name}' service account"
@@ -187,6 +191,7 @@ resource "confluent_api_key" "source_replicator-sa-kafka-api-key" {
       id = confluent_environment.source_environment.id
     }
   }
+  depends_on = [ confluent_service_account.source_replicator-sa ]  
 }
 
 ### CREATION OF TOPICS FOR CONNECT/REPLICATOR IN THE TARGET CLUSTER
@@ -207,7 +212,7 @@ resource "confluent_kafka_topic" "connect_replicator_internal_configs-topic" {
     secret = confluent_api_key.target_cluster-sa-kafka-api-key.secret
   }
 
-  depends_on = [ confluent_kafka_cluster.target_kafka-cluster ]
+  depends_on = [ confluent_kafka_cluster.target_kafka-cluster, confluent_service_account.target_cluster-sa ]
 }
 
 resource "confluent_kafka_topic" "connect_replicator_internal_offsets-topic" { 
@@ -227,7 +232,7 @@ resource "confluent_kafka_topic" "connect_replicator_internal_offsets-topic" {
     secret = confluent_api_key.target_cluster-sa-kafka-api-key.secret
   }
 
-  depends_on = [ confluent_kafka_cluster.target_kafka-cluster ]
+  depends_on = [ confluent_kafka_cluster.target_kafka-cluster, confluent_service_account.target_cluster-sa ]
 }
 
 resource "confluent_kafka_topic" "connect_replicator_internal_status-topic" { 
@@ -242,12 +247,33 @@ resource "confluent_kafka_topic" "connect_replicator_internal_status-topic" {
     "cleanup.policy"      = "compact"
   }
   
+  credentials {
+    key    = confluent_api_key.target_cluster-sa-kafka-api-key.id
+    secret = confluent_api_key.target_cluster-sa-kafka-api-key.secret
+  }
+
+  depends_on = [ confluent_kafka_cluster.target_kafka-cluster, confluent_service_account.target_cluster-sa ]
+}
+
+## NOTE: DeveloperWrite access is needed if not ClusterOwner
+resource "confluent_kafka_topic" "connect_replicator_internal_monitoring-topic" {
+  kafka_cluster {
+    id = confluent_kafka_cluster.target_kafka-cluster.id
+  }
+  rest_endpoint = confluent_kafka_cluster.target_kafka-cluster.rest_endpoint
+
+  topic_name         = "_confluent-monitoring"
+  partitions_count   = 5
+  config = {
+    "cleanup.policy"      = "compact"
+  }
+  
   credentials {    
     key    = confluent_api_key.target_cluster-sa-kafka-api-key.id
     secret = confluent_api_key.target_cluster-sa-kafka-api-key.secret
   }
 
-  depends_on = [ confluent_kafka_cluster.target_kafka-cluster ]
+  depends_on = [ confluent_kafka_cluster.target_kafka-cluster, confluent_service_account.target_cluster-sa ]
 }
 
 ### SCHEMA REGISTRY ESSENTIALS PACKAGE ON THE TARGET CLUSTER

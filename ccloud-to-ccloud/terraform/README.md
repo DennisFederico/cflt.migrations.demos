@@ -13,16 +13,16 @@ We will create the Confluent Cloud resources needed for the Demo using Terraform
 
 ## Requirements
 
-An API-Key and Secret of an user or SA (Service Account) with enough privileges to create environments and clusters (OrganizationAdmin)
+A Cloud API-Key and Secret of an user or SA (Service Account) with enough privileges to create environments and clusters (OrganizationAdmin)
 
 ## Steps
 
 1. Make a copy of `terraform.tfvars.template` as `terraform.tfvars`
 2. Edit `terraform.tfvars`:
-   - Set the API-Key and Secret with (OrganizationAdmin)
-   - Name the environments and clusters to create
+   - Set the Cloud API-Key and Secret (or API Key of user with OrganizationAdmin role)
+   - Name the environments and clusters to create as source and target cluster
    - Specify the topics to create in the Source cluster
-   - ...
+   - Specify a regular expression for the replicator that capture one or more of the topcis above
 
 3. Initialize terraform `terraform init`
 4. Apply the configuration to provision the resources `terraform apply`
@@ -32,5 +32,6 @@ An API-Key and Secret of an user or SA (Service Account) with enough privileges 
 8. Write the launch script for replicator `terraform output -raw source_cluster_kafka_properties > ../replicator/source-kafka.properties`
 9. Write the launch script for replicator `terraform output -raw target_cluster_kafka_properties > ../replicator/target-kafka.properties`
 
+## Replication Scenarios
 
-DOCKER EXEC CON EL COMMANDO PARA LISTAR Y GENERAR/LEER DATOS  (CON UNA IMAGEN DE KAFKA_CLIENT)
+See [/replicator/README.md](../replicator/README.md)
