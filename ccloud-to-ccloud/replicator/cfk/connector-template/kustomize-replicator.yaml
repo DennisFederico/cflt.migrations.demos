@@ -1,0 +1,15 @@
+- op: replace
+  path: /spec/configs/topic.regex
+  value: "source.topic.*"
+- op: replace
+  path: /spec/configs/src.kafka.bootstrap.servers
+  value: "SASL_SSL://pkc-4r297.europe-west1.gcp.confluent.cloud:9092"
+- op: replace
+  path: /spec/configs/src.kafka.sasl.jaas.config
+  value: "org.apache.kafka.common.security.plain.PlainLoginModule required username='MOGNOSVVHZDBUAEX' password='E2L00xmhxcQXjnuvXF0SuoYaQukaSNmAn86PLaVC8qN61LaUNk2QaEIB6z0gUJjP';"
+- op: replace
+  path: /spec/configs/dest.kafka.bootstrap.servers
+  value: "SASL_SSL://pkc-l6wr6.europe-west2.gcp.confluent.cloud:9092"
+- op: replace
+  path: /spec/configs/dest.kafka.sasl.jaas.config
+  value: "org.apache.kafka.common.security.plain.PlainLoginModule required username='VH65KLJUSVMKR63I' password='4PrEyVEXUaTxgCwyO0W3fPWG/5uSBrftsW87z98rnRezZ+aOqFcCSLG9pMBuKIFb';"

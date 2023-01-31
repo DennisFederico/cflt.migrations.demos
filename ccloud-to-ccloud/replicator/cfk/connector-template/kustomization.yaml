@@ -1,0 +1,9 @@
+resources:
+- replicator-connector.yaml.template
+
+patchesJson6902:
+- target:
+    version: v1beta1
+    kind: Connector
+    name: replicator-connector
+  path: kustomize-replicator.yaml

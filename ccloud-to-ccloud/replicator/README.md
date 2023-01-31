@@ -26,7 +26,7 @@ TODO... Intro, Why, etc...
 
 #### Spin Connect with Docker Compose
 
-The provided [docker-compose.yml](docker-compose.yml) contains a sample configuration of a Kafka Connect node and Confluent Control Center to manage this single-node connect cluster. Both Kafka Connect and C3 are configured with the Target cluster as backend, make sure you have "created" the `.env` with the configuration and credentials from [terraform](../terraform/README.md)
+The provided [docker/docker-compose.yml](docker/docker-compose.yml) contains a sample configuration of a Kafka Connect node and Confluent Control Center to manage this single-node connect cluster. Both Kafka Connect and C3 are configured with the Target cluster as backend, make sure you have "created" the `.env` with the configuration and credentials from [terraform](../terraform/README.md)
 
 ```properties
 #CONTENT EXAMPLE OF .env FOR DOCKER COMPOSE

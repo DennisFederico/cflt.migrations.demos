@@ -1,0 +1,14 @@
+resources:
+- cp-platform.yaml.template
+
+patchesJson6902:
+- target:
+    version: v1beta1
+    kind: Connect
+    name: connect-replicator
+  path: kustomize-connect.yaml
+- target:
+    version: v1beta1
+    kind: ControlCenter
+    name: controlcenter
+  path: kustomize-controlcenter.yaml

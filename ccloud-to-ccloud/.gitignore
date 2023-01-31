@@ -6,4 +6,9 @@ terraform.tfstate*
 submit-replicator.sh
 source-kafka.properties
 target-kafka.properties
+cfk-source-cluster-creds.txt
+cfk-target-cluster-creds.txt
+cfk-sr-cluster-creds.txt
+cp-platform.yaml
+replicator.yaml
 notes.txt

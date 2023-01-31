@@ -1,0 +1,9 @@
+- op: replace
+  path: /spec/dependencies/schemaRegistry/url
+  value: https://psrc-2312y.europe-west3.gcp.confluent.cloud
+- op: replace
+  path: /spec/dependencies/kafka/bootstrapEndpoint
+  value: SASL_SSL://pkc-l6wr6.europe-west2.gcp.confluent.cloud:9092
+- op: replace
+  path: /spec/monitoringKafkaClusters/0/bootstrapEndpoint
+  value: SASL_SSL://pkc-4r297.europe-west1.gcp.confluent.cloud:9092

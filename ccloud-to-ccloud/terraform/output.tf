@@ -68,6 +68,38 @@ output "submit-replicator_sh" {
   sensitive = true
 }
 
+output "replicator_connector_json" {
+  value = <<-EOT
+{
+    "name": "replicator-demo",
+    "config": {
+      "name": "replicator-demo",
+      "connector.class": "io.confluent.connect.replicator.ReplicatorSourceConnector",
+      "tasks.max": "1",
+      "topic.regex": "${var.source_replicator_topics-regex}",
+      "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
+      "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
+      "topic.auto.create": "true",
+      "topic.preserve.partitions": "true",
+      "offset.translator.tasks.max": "0",
+      "offset.timestamps.commit": "false",
+
+      "src.consumer.group.id": "replicator-demo",
+      "src.kafka.bootstrap.servers": "${confluent_kafka_cluster.source_kafka-cluster.bootstrap_endpoint}",
+      "src.kafka.security.protocol": "SASL_SSL",
+      "src.kafka.sasl.mechanism": "PLAIN",
+      "src.kafka.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username='${confluent_api_key.source_replicator-sa-kafka-api-key.id}' password='${nonsensitive(confluent_api_key.source_replicator-sa-kafka-api-key.secret)}';",
+
+      "dest.kafka.bootstrap.servers": "${confluent_kafka_cluster.target_kafka-cluster.bootstrap_endpoint}",
+      "dest.kafka.security.protocol": "SASL_SSL",
+      "dest.kafka.sasl.mechanism": "PLAIN",
+      "dest.kafka.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username='${confluent_api_key.target_cluster-sa-kafka-api-key.id}' password='${nonsensitive(confluent_api_key.target_cluster-sa-kafka-api-key.secret)}';"
+    }
+  }
+  EOT
+  sensitive = true
+}
+
 output "compose_env" {
   value = <<-EOT
 #### VARIABLES FOR DOCKER COMPOSE
@@ -126,6 +158,78 @@ acks=all
 schema.registry.url=${confluent_schema_registry_cluster.target_sr.rest_endpoint}
 basic.auth.credentials.source=USER_INFO
 basic.auth.user.info=${confluent_api_key.target_schema-registry-api-key.id}:${nonsensitive(confluent_api_key.target_schema-registry-api-key.secret)}
+EOT
+  sensitive = true
+}
+
+output "cfk_secrets_source_cluster" {
+  value = <<-EOT
+username=${confluent_api_key.source_cluster-sa-kafka-api-key.id}
+password=${nonsensitive(confluent_api_key.source_cluster-sa-kafka-api-key.secret)}
+EOT
+  sensitive = true
+}
+
+output "cfk_secrets_target_cluster" {
+  value = <<-EOT
+username=${confluent_api_key.target_cluster-sa-kafka-api-key.id}
+password=${nonsensitive(confluent_api_key.target_cluster-sa-kafka-api-key.secret)}
+EOT
+  sensitive = true
+}
+
+output "cfk_secrets_schema_registry" {
+  value = <<-EOT
+username=${confluent_api_key.target_schema-registry-api-key.id}
+password=${nonsensitive(confluent_api_key.target_schema-registry-api-key.secret)}
+EOT
+  sensitive = true
+}
+
+output "k8s_kustomize_connect" {
+  value = <<-EOT
+- op: replace
+  path: /spec/dependencies/schemaRegistry/url
+  value: ${confluent_schema_registry_cluster.target_sr.rest_endpoint}
+- op: replace
+  path: /spec/dependencies/kafka/bootstrapEndpoint
+  value: ${confluent_kafka_cluster.target_kafka-cluster.bootstrap_endpoint}
+EOT
+  sensitive = true
+}
+
+output "k8s_kustomize_controlcenter" {
+  value = <<-EOT
+- op: replace
+  path: /spec/dependencies/schemaRegistry/url
+  value: ${confluent_schema_registry_cluster.target_sr.rest_endpoint}
+- op: replace
+  path: /spec/dependencies/kafka/bootstrapEndpoint
+  value: ${confluent_kafka_cluster.target_kafka-cluster.bootstrap_endpoint}
+- op: replace
+  path: /spec/monitoringKafkaClusters/0/bootstrapEndpoint
+  value: ${confluent_kafka_cluster.source_kafka-cluster.bootstrap_endpoint}
+EOT
+  sensitive = true
+}
+
+output "k8s_kustomize_connector" {
+  value = <<-EOT
+- op: replace
+  path: /spec/configs/topic.regex
+  value: "${var.source_replicator_topics-regex}"
+- op: replace
+  path: /spec/configs/src.kafka.bootstrap.servers
+  value: "${confluent_kafka_cluster.source_kafka-cluster.bootstrap_endpoint}"
+- op: replace
+  path: /spec/configs/src.kafka.sasl.jaas.config
+  value: "org.apache.kafka.common.security.plain.PlainLoginModule required username='${confluent_api_key.source_replicator-sa-kafka-api-key.id}' password='${nonsensitive(confluent_api_key.source_replicator-sa-kafka-api-key.secret)}';"
+- op: replace
+  path: /spec/configs/dest.kafka.bootstrap.servers
+  value: "${confluent_kafka_cluster.target_kafka-cluster.bootstrap_endpoint}"
+- op: replace
+  path: /spec/configs/dest.kafka.sasl.jaas.config
+  value: "org.apache.kafka.common.security.plain.PlainLoginModule required username='${confluent_api_key.target_cluster-sa-kafka-api-key.id}' password='${nonsensitive(confluent_api_key.target_cluster-sa-kafka-api-key.secret)}';"
 EOT
   sensitive = true
 }

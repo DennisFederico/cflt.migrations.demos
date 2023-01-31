@@ -1,0 +1,34 @@
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: Connector
+metadata:
+  name: replicator-connector
+  namespace: confluent
+spec:
+  name: replicator
+  class: "io.confluent.connect.replicator.ReplicatorSourceConnector"
+  connectClusterRef:
+    name: connect-replicator  
+  taskMax: 1
+  configs:
+    # topic.whitelist: "topic1"
+    topic.regex: "TOPIC-REGEX"
+    confluent.license: ""
+    #confluent.topic.replication.factor: "3"
+    key.converter: "io.confluent.connect.replicator.util.ByteArrayConverter"
+    value.converter: "io.confluent.connect.replicator.util.ByteArrayConverter"
+    topic.auto.create: "true"
+    topic.preserve.partitions: "true"
+    offset.translator.tasks.max: "0"
+    offset.timestamps.commit: "false"    
+    src.consumer.group.id: "replicator-demo"
+    src.kafka.bootstrap.servers: SASL_SSL://SOURCE-CLOUD:9092
+    src.kafka.security.protocol: "SASL_SSL"
+    src.kafka.sasl.mechanism: "PLAIN"
+    src.kafka.sasl.jaas.config: SOURCE-JAAS
+    
+    dest.kafka.bootstrap.servers: SASL_SSL://TARGET-CLOUD:9092
+    dest.kafka.security.protocol: "SASL_SSL"
+    dest.kafka.sasl.mechanism: "PLAIN"
+    dest.kafka.sasl.jaas.config: TARGET-JAAS
+
