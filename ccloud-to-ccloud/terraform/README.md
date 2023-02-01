@@ -46,6 +46,7 @@ A Cloud API-Key and Secret of an user or SA (Service Account) with enough privil
 4. Write the Kustomize patch file for Connect Cluster `terraform output -raw k8s_kustomize_connect > ../replicator/cfk/platform-template/kustomize-connect.yaml`
 5. Write the Kustomize patch file for Control Center `terraform output -raw k8s_kustomize_controlcenter > ../replicator/cfk/platform-template/kustomize-controlcenter.yaml`
 6. Write the Kustomize patch file for the Connector `terraform output -raw k8s_kustomize_connector > ../replicator/cfk/connector-template/kustomize-replicator.yaml`
+7. (Optional) Prepare replicator-connector definition as json `terraform output -raw replicator_connector_json > ../replicator/cfk/connector-replicator.json`
 
 ## Replication Scenarios
 

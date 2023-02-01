@@ -81,3 +81,10 @@ kubectl apply -f replicator.yaml
 ```
 
 - (Optional) Deploy Replicator Connector as JSON from Control Center
+
+Use control center to deploy the replicator connector from the Json file built using terraform
+
+```bash
+# From terraform folder
+terraform output -raw replicator_connector_json > ../replicator/cfk/connector-replicator.json
+```

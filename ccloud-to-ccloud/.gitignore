@@ -12,3 +12,4 @@ cfk-sr-cluster-creds.txt
 cp-platform.yaml
 replicator.yaml
 notes.txt
+connector-replicator.json
