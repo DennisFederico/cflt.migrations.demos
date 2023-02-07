@@ -13,3 +13,6 @@ cp-platform.yaml
 replicator.yaml
 notes.txt
 connector-replicator.json
+kustomize-controlcenter.yaml
+kustomize-connect.yaml
+kustomize-replicator.yaml
