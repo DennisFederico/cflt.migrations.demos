@@ -126,3 +126,89 @@ Fourth, Add the following entries to `/etc/hosts` on linux/macOs systems or `C:\
 ```
 
 You can now open control center using [http://controlcenter.confluent.local.com](http://controlcenter.confluent.local.com) or `curl` to connect from outside kubernetes to deploy or query connector (replicator) state [http://connect.confluent.local.com/connectors](http://connect.confluent.local.com/connectors)
+
+### NOTE ON CONNECTING CONNECT WITH CCLOUD USING OAUTH
+
+OAuth is becoming a priority since its the Cloud Native autheticaton mechanism making LDAP outdated, but it's not ready yet in CFK CRD's. As a work around we will exploit the `jaasConfigPassThrough` authentication mechanism to set a explicit jaas connection string, and override some configuration of the Connect CRD for the different connections that it uses.
+
+- Create a file with the jaas config specifiying the credentials to the identity provider and, LoginModule, etc... (replace the values in angle brackets '<>')
+
+```properties
+sasl.oauthbearer.token.endpoint.url=https://login.microsoftonline.com/<tenantId>/oauth2/v2.0/token
+sasl.login.callback.handler.class=org.apache.kafka.common.security.oauthbearer.secured.OAuthBearerLoginCallbackHandler
+sasl.mechanism=OAUTHBEARER
+sasl.jaas.config=org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+    clientId='<clientId>' \
+    clientSecret='<clientSecret>' \
+    extension_identityPoolId='<poolId>' \
+    extension_logicalCluster='<clusterId>' \
+    scope='api://<scope>/.default';
+```
+
+- Assuming the above file is called `oauth-ccloud-jaas.conf`, create a secret with key `plain-jaas.conf`
+
+```bash
+kubectl -n confluent create secret generic ccloud-target-oauth-jaas --from-file=plain-jaas.conf=oauth-ccloud-jaas.conf
+```
+
+- Note the `configOverrides` in the CRD and the `jaasConfigPassThrough` for the kafka dependency
+
+```yaml
+# EXAMPLE
+...
+spec:
+  build:
+    onDemand:
+      plugins:
+        confluentHub:
+        - name: kafka-connect-datagen
+          owner: confluentinc
+          version: 0.6.0
+        locationType: confluentHub
+    type: onDemand
+  configOverrides:
+    server:
+    - rest.extension.classes=io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension
+    - connector.class=io.confluent.connect.replicator.ReplicatorSourceConnector
+    - sasl.mechanism=OAUTHBEARER
+    - sasl.login.callback.handler.class=org.apache.kafka.common.security.oauthbearer.secured.OAuthBearerLoginCallbackHandler
+    - sasl.oauthbearer.token.endpoint.url=https://login.microsoftonline.com/<tenantId>/oauth2/v2.0/token
+    - admin.sasl.mechanism=OAUTHBEARER
+    - admin.sasl.login.callback.handler.class=org.apache.kafka.common.security.oauthbearer.secured.OAuthBearerLoginCallbackHandler
+    - admin.sasl.oauthbearer.token.endpoint.url=https://login.microsoftonline.com/<tenantId>/oauth2/v2.0/token
+    - consumer.sasl.mechanism=OAUTHBEARER
+    - consumer.sasl.login.callback.handler.class=org.apache.kafka.common.security.oauthbearer.secured.OAuthBearerLoginCallbackHandler
+    - consumer.sasl.oauthbearer.token.endpoint.url=https://login.microsoftonline.com/<tenantId>/oauth2/v2.0/token
+    - producer.sasl.mechanism=OAUTHBEARER
+    - producer.sasl.login.callback.handler.class=org.apache.kafka.common.security.oauthbearer.secured.OAuthBearerLoginCallbackHandler
+    - producer.sasl.oauthbearer.token.endpoint.url=https://login.microsoftonline.com/<tenantId>/oauth2/v2.0/token
+    # - producer.confluent.monitoring.interceptor.security.protocol=SASL_SSL
+    # - producer.confluent.monitoring.interceptor.sasl.mechanism=OAUTHBEARER
+    # - producer.confluent.monitoring.interceptor.sasl.login.callback.handler.class=org.apache.kafka.common.security.oauthbearer.secured.OAuthBearerLoginCallbackHandler
+    # - producer.confluent.monitoring.interceptor.sasl.oauthbearer.token.endpoint.url=https://login.microsoftonline.com/<tenantId>/oauth2/v2.0/token
+    # - producer.confluent.monitoring.interceptor.sasl.jaas.config=${file:/mnt/secrets/ccloud-target-oauth-jaas/plain-jaas.conf:sasl.jaas.config}
+    # - consumer.confluent.monitoring.interceptor.security.protocol=SASL_SSL
+    # - consumer.confluent.monitoring.interceptor.sasl.mechanism=OAUTHBEARER
+    # - consumer.confluent.monitoring.interceptor.sasl.login.callback.handler.class=org.apache.kafka.common.security.oauthbearer.secured.OAuthBearerLoginCallbackHandler
+    # - consumer.confluent.monitoring.interceptor.sasl.oauthbearer.token.endpoint.url=https://login.microsoftonline.com/<tenantId>/oauth2/v2.0/token
+    # - consumer.confluent.monitoring.interceptor.sasl.jaas.config=${file:/mnt/secrets/ccloud-target-oauth-jaas/plain-jaas.conf:sasl.jaas.config}
+  connectorOverridePolicy: All
+  dependencies:
+    interceptor:
+      enabled: false
+      publishMs: 5000
+    kafka:
+      authentication:
+        jaasConfigPassThrough:          
+          secretRef: ccloud-target-oauth-jaas
+        type: plain
+      bootstrapEndpoint: <CCLOUD BOOTSTRAP>:9092
+      tls:
+        enabled: true
+        ignoreTrustStoreConfig: true
+...
+```
+
+- Uncomment and configure the monitoring interceptor only in using C3 in standard mode and enable `spec>dependencies>interceptor>enabled`
+
+***IMPORTANT***: the `ReplicatorMonitoringExtension` may not work properly behind the ingress and C3 might not show the Replicators in the Replicator Tab unless you configure a reverse-proxy or use `kubectl port-forward`

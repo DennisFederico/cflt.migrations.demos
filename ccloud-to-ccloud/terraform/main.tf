@@ -264,9 +264,6 @@ resource "confluent_kafka_topic" "connect_replicator_internal_monitoring-topic" 
 
   topic_name         = "_confluent-monitoring"
   partitions_count   = 5
-  config = {
-    "cleanup.policy"      = "compact"
-  }
   
   credentials {    
     key    = confluent_api_key.target_cluster-sa-kafka-api-key.id
